@@ -1,14 +1,38 @@
 #include "types.h"
-#include <cassert>
+#include <iostream>
+#include <string>
+
+static int failures = 0;
+
+static void expectEmpty(const std::string& name, const Piece& piece, bool expected) {
+    bool got = piece.isEmpty();
+    if (got != expected) {
+        std::cout << "FAIL  " << name << ": expected isEmpty() = "
+                  << (expected ? "true" : "false") << ", got "
+                  << (got ? "true" : "false") << "\n";
+        failures++;
+    } else {
+        std::cout << "ok    " << name << " -> "
+                  << (got ? "empty" : "not empty") << "\n";
+    }
+}
 
 int main() {
-    Piece empty{PieceType::EmptyPiece, PieceColour::EmptyColour};
-    Piece whitePawn{PieceType::Pawn, PieceColour::White};
-    Piece noColourButPiece{PieceType::Pawn, PieceColour::EmptyColour};
-    Piece noPieceButColour{PieceType::EmptyPiece, PieceColour::White};
+    std::cout << "--- consistent pieces ---\n";
+    expectEmpty("empty square",
+                Piece{PieceType::Empty, PieceColour::Empty}, true);
+    expectEmpty("white pawn",
+                Piece{PieceType::Pawn, PieceColour::White}, false);
+    expectEmpty("black king",
+                Piece{PieceType::King, PieceColour::Black}, false);
 
-    assert(empty.isEmpty());
-    assert(!whitePawn.isEmpty());
-    assert(noColourButPiece.isEmpty());
-    assert(noPieceButColour.isEmpty());
+    std::cout << "--- inconsistent pieces ---\n";
+    expectEmpty("piece type with no colour",
+                Piece{PieceType::Pawn, PieceColour::Empty}, true);
+    expectEmpty("no piece type with a colour",
+                Piece{PieceType::Empty, PieceColour::White}, true);
+
+    std::cout << "\n" << (failures == 0 ? "all passed" : "some failed")
+              << " (" << failures << " failures)\n";
+    return failures == 0 ? 0 : 1;
 }
