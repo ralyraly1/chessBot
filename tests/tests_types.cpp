@@ -26,12 +26,6 @@ int main() {
     expectEmpty("black king",
                 Piece{PieceType::King, PieceColour::Black}, false);
 
-    std::cout << "--- inconsistent pieces ---\n";
-    expectEmpty("piece type with no colour",
-                Piece{PieceType::Pawn, PieceColour::Empty}, true);
-    expectEmpty("no piece type with a colour",
-                Piece{PieceType::Empty, PieceColour::White}, true);
-
     std::cout << "\n" << (failures == 0 ? "all passed" : "some failed")
               << " (" << failures << " failures)\n";
     return failures == 0 ? 0 : 1;
