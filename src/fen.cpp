@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <cctype>
 #include <iostream>
+#include <optional>
 
 std::array<Piece, FILES> parseRank(std::string rankStr){
     std::array<Piece, FILES> rankArr;
@@ -162,4 +163,34 @@ std::uint8_t parseCastleRights(std::string castleStr){
         currChar++;
     }
     return rights;
+}
+
+std::optional<Square> parseEnPassant(std::string enPStr){
+    std::optional<Square> enPassantSquare;
+    int rankIndex = 0;
+    int fileIndex = 0;
+    if (enPStr == "-"){
+        return enPassantSquare;
+    }
+    if (enPStr == ""){
+        throw std::invalid_argument(enPStr + ": En Passant argument missing.");
+    }
+    if (enPStr.length() != 2){
+        throw std::invalid_argument(enPStr + ": En Passant argument length invalid");
+    }
+    char fileChar = enPStr[0];
+    char rankChar = enPStr[1];
+    if (fileChar < 'a' || fileChar > 'h'){
+        throw std::invalid_argument(enPStr + ": En Passant file must be a letter from a to h");
+    }
+    if (rankChar < '1' || rankChar > '8'){
+        throw std::invalid_argument(enPStr + ": En Passant rank must be a digit from 1 to 8");
+    }
+    fileIndex = fileChar - 'a';
+    rankIndex = 8 - (rankChar - '0');
+    Square sq;
+    sq.file = fileIndex;
+    sq.rank = rankIndex;
+    enPassantSquare = sq;
+    return enPassantSquare;
 }
