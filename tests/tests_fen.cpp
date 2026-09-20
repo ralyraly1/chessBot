@@ -77,6 +77,61 @@ static void expectThrows(const std::string& input) {
     }
 }
 
+static std::string boardToString(const std::array<std::array<Piece, FILES>, RANKS>& board) {
+    std::string s;
+    for (int r = 0; r < RANKS; r++) {
+        if (r > 0) s += '/';
+        s += rankToString(board[r]);
+    }
+    return s;
+}
+
+static void expectBoard(const std::string& input, const std::string& expected) {
+    try {
+        std::array<std::array<Piece, FILES>, RANKS> board = parseBoard(input);
+        std::string got = boardToString(board);
+        bool clean = true;
+        for (const auto& rank : board) {
+            if (!emptySquaresAreClean(rank)) clean = false;
+        }
+        if (got != expected) {
+            std::cout << "FAIL  \"" << input << "\": expected " << expected
+                      << " got " << got << "\n";
+            failures++;
+        } else if (!clean) {
+            std::cout << "FAIL  \"" << input << "\": a square has a mismatched type and colour\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\"\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": unexpected throw: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
+static void expectBoardThrows(const std::string& input, const std::string& messagePart) {
+    try {
+        parseBoard(input);
+        std::cout << "FAIL  \"" << input << "\": should have thrown\n";
+        failures++;
+    } catch (const std::invalid_argument& e) {
+        std::string msg = e.what();
+        if (msg.find(messagePart) == std::string::npos) {
+            std::cout << "FAIL  \"" << input << "\": threw the wrong message: "
+                      << msg << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" threw: " << msg << "\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": wrong exception type: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
 int main() {
     std::cout << "--- valid ranks ---\n";
     expectRank("rnbqkbnr", "rnbqkbnr");
@@ -122,6 +177,38 @@ int main() {
     expectThrows("rnbqkbn/");
     expectThrows("rnbqkbn ");
     expectThrows("rnbqkbnX");
+
+    std::cout << "--- valid boards ---\n";
+    expectBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
+                "rnbqkbnr/pppppppp/......../......../......../......../PPPPPPPP/RNBQKBNR");
+    expectBoard("8/8/8/8/8/8/8/8",
+                "......../......../......../......../......../......../......../........");
+    expectBoard("k7/8/8/8/8/8/8/7K",
+                "k......./......../......../......../......../......../......../.......K");
+    expectBoard("r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R",
+                "r.bqkb.r/pppp.ppp/..n..n../....p.../..B.P.../.....N../PPPP.PPP/RNBQK..R");
+
+    std::cout << "--- too few ranks ---\n";
+    expectBoardThrows("", "Too few ranks");
+    expectBoardThrows("8", "Too few ranks");
+    expectBoardThrows("8/8/8/8/8/8/8", "Too few ranks");
+
+    std::cout << "--- too many ranks ---\n";
+    expectBoardThrows("8/8/8/8/8/8/8/8/8", "Too many ranks");
+    expectBoardThrows("8/8/8/8/8/8/8/8/", "Too many ranks");
+    expectBoardThrows("8/8/8/8/8/8/8/8//", "Too many ranks");
+
+    std::cout << "--- empty ranks ---\n";
+    expectBoardThrows("/8/8/8/8/8/8/8", "files is below 8");
+    expectBoardThrows("8//8/8/8/8/8/8", "files is below 8");
+    expectBoardThrows("8/8/8/8/8/8/8/", "files is below 8");
+
+    std::cout << "--- bad rank contents ---\n";
+    expectBoardThrows("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNX", "Invalid character");
+    expectBoardThrows("rnbqkbnrr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", "files is above 8");
+    expectBoardThrows("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN", "files is below 8");
+    expectBoardThrows("rnbqkbnr/pppppppp/44/8/8/8/PPPPPPPP/RNBQKBNR", "next to each other");
+    expectBoardThrows("rnbqkbnr/pppppppp/9/8/8/8/PPPPPPPP/RNBQKBNR", "Invalid digit");
 
     std::cout << "\n" << (failures == 0 ? "all passed" : "some failed")
               << " (" << failures << " failures)\n";

@@ -4,3 +4,4 @@
 #include <string>
 
 std::array<Piece, FILES> parseRank(std::string rankStr);
+std::array<std::array<Piece, FILES>, RANKS> parseBoard(std::string boardStr);

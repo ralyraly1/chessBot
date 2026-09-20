@@ -3,12 +3,13 @@
 #include <string>
 #include <stdexcept>
 #include <cctype>
+#include <iostream>
 
 std::array<Piece, FILES> parseRank(std::string rankStr){
     std::array<Piece, FILES> rankArr;
     int currFile = 0;
     bool wasDigit = false;
-    for(const char c :rankStr){
+    for(const char c : rankStr){
         Piece currPiece;
         if(c >= '0' && c <= '9'){
             if(!(c >= '1' && c <= '8')){
@@ -71,4 +72,33 @@ std::array<Piece, FILES> parseRank(std::string rankStr){
         throw std::invalid_argument(rankStr + ": Given number of files is below 8");
     }
     return rankArr;
+}
+
+std::array<std::array<Piece, FILES>, RANKS> parseBoard(std::string boardStr){
+    int currSlashes = 0;
+    std::string rankStr;
+    std::array<Piece, FILES> rankArr;
+    std::array<std::array<Piece, FILES>, RANKS> boardArr;
+    for(char c : boardStr){
+        if(currSlashes + 1 > RANKS){
+            throw std::invalid_argument(boardStr + ": Too many ranks, expected 8 separated by 7 slashes");
+        }
+        if(c == '/'){
+            rankArr = parseRank(rankStr);
+            boardArr[currSlashes] = rankArr;
+            rankStr = "";
+            currSlashes++;
+            continue;
+        }
+        rankStr += c;
+    }
+    if(currSlashes < RANKS - 1){
+        throw std::invalid_argument(boardStr + ": Too few ranks, expected 8 separated by 7 slashes");
+    }
+    if(currSlashes > RANKS - 1){
+        throw std::invalid_argument(boardStr + ": Too many ranks, expected 8 separated by 7 slashes");
+    }
+    rankArr = parseRank(rankStr);
+    boardArr[currSlashes] = rankArr;
+    return boardArr;
 }
