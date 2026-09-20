@@ -2,8 +2,8 @@
 #include <cassert>
 #include <cstdint>
 
-inline constexpr int RANKS = 8;
-inline constexpr int FILES = 8;
+inline constexpr int RANKS = 8; // Rank index 0 is equivalent to rank 8 on the chess board
+inline constexpr int FILES = 8; 
 
 inline constexpr std::uint8_t BLACK_QUEENSIDE_CASTLE = 0b0001;
 inline constexpr std::uint8_t BLACK_KINGSIDE_CASTLE = 0b0010;
@@ -24,6 +24,11 @@ struct Piece {
         assert(isEmptyPiece == isEmptyColour);
         return isEmptyPiece && isEmptyColour;
     }
+};
+
+struct Square {
+    std::uint8_t rank;
+    std::uint8_t file;
 };
 
 static_assert(sizeof(Piece) == 2);
