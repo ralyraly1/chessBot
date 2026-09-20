@@ -7,6 +7,7 @@ inline constexpr int FILES = 8;
 
 enum class PieceType : std::uint8_t {Pawn, Bishop, Knight, Rook, Queen, King, Empty};
 enum class PieceColour : std::uint8_t {White, Black, Empty};
+enum class Side : std::uint8_t {White, Black};
 
 struct Piece {
     PieceType pieceType = PieceType::Empty;
