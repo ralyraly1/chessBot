@@ -102,3 +102,18 @@ std::array<std::array<Piece, FILES>, RANKS> parseBoard(std::string boardStr){
     boardArr[currSlashes] = rankArr;
     return boardArr;
 }
+
+Side parseSide(std::string sideStr){
+    if (sideStr.length() != 1){
+        throw std::invalid_argument(sideStr + ": Invalid length of side to move argument");
+    }
+    char sideChar = sideStr[0];
+    switch(sideChar){
+        case 'w':
+            return Side::White;
+        case 'b':
+            return Side::Black;
+        default:
+            throw std::invalid_argument(sideStr + ": Side to move must be a 'w' or a 'b' (case sensitive)");
+    }
+}

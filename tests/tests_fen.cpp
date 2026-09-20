@@ -132,6 +132,48 @@ static void expectBoardThrows(const std::string& input, const std::string& messa
     }
 }
 
+static const char* sideName(Side s) {
+    return s == Side::White ? "White" : "Black";
+}
+
+static void expectSide(const std::string& input, Side expected) {
+    try {
+        Side got = parseSide(input);
+        if (got != expected) {
+            std::cout << "FAIL  \"" << input << "\": expected " << sideName(expected)
+                      << " got " << sideName(got) << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" -> " << sideName(got) << "\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": unexpected throw: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
+static void expectSideThrows(const std::string& input, const std::string& messagePart) {
+    try {
+        parseSide(input);
+        std::cout << "FAIL  \"" << input << "\": should have thrown\n";
+        failures++;
+    } catch (const std::invalid_argument& e) {
+        std::string msg = e.what();
+        if (msg.find(messagePart) == std::string::npos) {
+            std::cout << "FAIL  \"" << input << "\": threw the wrong message: "
+                      << msg << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" threw: " << msg << "\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": wrong exception type: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
 int main() {
     std::cout << "--- valid ranks ---\n";
     expectRank("rnbqkbnr", "rnbqkbnr");
@@ -209,6 +251,27 @@ int main() {
     expectBoardThrows("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN", "files is below 8");
     expectBoardThrows("rnbqkbnr/pppppppp/44/8/8/8/PPPPPPPP/RNBQKBNR", "next to each other");
     expectBoardThrows("rnbqkbnr/pppppppp/9/8/8/8/PPPPPPPP/RNBQKBNR", "Invalid digit");
+
+    std::cout << "--- valid side to move ---\n";
+    expectSide("w", Side::White);
+    expectSide("b", Side::Black);
+
+    std::cout << "--- bad length ---\n";
+    expectSideThrows("", "Invalid length");
+    expectSideThrows("wb", "Invalid length");
+    expectSideThrows("w ", "Invalid length");
+    expectSideThrows(" w", "Invalid length");
+    expectSideThrows("white", "Invalid length");
+
+    std::cout << "--- wrong case ---\n";
+    expectSideThrows("W", "must be a 'w' or a 'b'");
+    expectSideThrows("B", "must be a 'w' or a 'b'");
+
+    std::cout << "--- invalid characters ---\n";
+    expectSideThrows("x", "must be a 'w' or a 'b'");
+    expectSideThrows("1", "must be a 'w' or a 'b'");
+    expectSideThrows("-", "must be a 'w' or a 'b'");
+    expectSideThrows("/", "must be a 'w' or a 'b'");
 
     std::cout << "\n" << (failures == 0 ? "all passed" : "some failed")
               << " (" << failures << " failures)\n";
