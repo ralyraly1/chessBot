@@ -79,7 +79,7 @@ std::array<std::array<Piece, FILES>, RANKS> parseBoard(std::string boardStr){
     std::string rankStr;
     std::array<Piece, FILES> rankArr;
     std::array<std::array<Piece, FILES>, RANKS> boardArr;
-    for(char c : boardStr){
+    for(const char c : boardStr){
         if(currSlashes + 1 > RANKS){
             throw std::invalid_argument(boardStr + ": Too many ranks, expected 8 separated by 7 slashes");
         }
@@ -116,4 +116,50 @@ Side parseSide(std::string sideStr){
         default:
             throw std::invalid_argument(sideStr + ": Side to move must be a 'w' or a 'b' (case sensitive)");
     }
+}
+
+std::uint8_t parseCastleRights(std::string castleStr){
+    int currChar = 0;
+    std::uint8_t rights = 0b0000;
+    if (castleStr == "-"){
+        return 0;
+    }
+    if (castleStr == ""){
+        throw std::invalid_argument(castleStr + ": Castling rights argument missing.");
+    }
+    for(const char c : castleStr){
+        if (currChar + 1 > 4){
+            throw std::invalid_argument(castleStr + ": Castling rights argument contains too many characters");
+        }
+        switch(c){
+            case 'K':
+                if ((rights & WHITE_KINGSIDE_CASTLE) != 0){
+                    throw std::invalid_argument(castleStr + ": Castling rights argument contains duplicate character: " + c);
+                }
+                rights |= WHITE_KINGSIDE_CASTLE;
+                break;
+            case 'Q':
+                if ((rights & WHITE_QUEENSIDE_CASTLE) != 0){
+                    throw std::invalid_argument(castleStr + ": Castling rights argument contains duplicate character: " + c);
+                }
+                rights |= WHITE_QUEENSIDE_CASTLE;
+                break;
+            case 'k':
+                if ((rights & BLACK_KINGSIDE_CASTLE) != 0){
+                    throw std::invalid_argument(castleStr + ": Castling rights argument contains duplicate character: " + c);
+                }
+                rights |= BLACK_KINGSIDE_CASTLE;
+                break;
+            case 'q':
+                if ((rights & BLACK_QUEENSIDE_CASTLE) != 0){
+                    throw std::invalid_argument(castleStr + ": Castling rights argument contains duplicate character: " + c);
+                }
+                rights |= BLACK_QUEENSIDE_CASTLE;
+                break;
+            default:
+                throw std::invalid_argument(castleStr + ": Castling rights argument contains invalid character: " + c);
+        }
+        currChar++;
+    }
+    return rights;
 }

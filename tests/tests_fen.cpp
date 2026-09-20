@@ -174,6 +174,53 @@ static void expectSideThrows(const std::string& input, const std::string& messag
     }
 }
 
+static std::string rightsToString(std::uint8_t r) {
+    std::string s;
+    s += (r & WHITE_KINGSIDE_CASTLE) != 0 ? 'K' : '-';
+    s += (r & WHITE_QUEENSIDE_CASTLE) != 0 ? 'Q' : '-';
+    s += (r & BLACK_KINGSIDE_CASTLE) != 0 ? 'k' : '-';
+    s += (r & BLACK_QUEENSIDE_CASTLE) != 0 ? 'q' : '-';
+    return s;
+}
+
+static void expectRights(const std::string& input, std::uint8_t expected) {
+    try {
+        std::uint8_t got = parseCastleRights(input);
+        if (got != expected) {
+            std::cout << "FAIL  \"" << input << "\": expected " << rightsToString(expected)
+                      << " got " << rightsToString(got) << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" -> " << rightsToString(got) << "\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": unexpected throw: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
+static void expectRightsThrows(const std::string& input, const std::string& messagePart) {
+    try {
+        parseCastleRights(input);
+        std::cout << "FAIL  \"" << input << "\": should have thrown\n";
+        failures++;
+    } catch (const std::invalid_argument& e) {
+        std::string msg = e.what();
+        if (msg.find(messagePart) == std::string::npos) {
+            std::cout << "FAIL  \"" << input << "\": threw the wrong message: "
+                      << msg << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" threw: " << msg << "\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": wrong exception type: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
 int main() {
     std::cout << "--- valid ranks ---\n";
     expectRank("rnbqkbnr", "rnbqkbnr");
@@ -272,6 +319,40 @@ int main() {
     expectSideThrows("1", "must be a 'w' or a 'b'");
     expectSideThrows("-", "must be a 'w' or a 'b'");
     expectSideThrows("/", "must be a 'w' or a 'b'");
+
+        std::cout << "--- valid castling rights ---\n";
+    expectRights("-", 0);
+    expectRights("K", WHITE_KINGSIDE_CASTLE);
+    expectRights("Q", WHITE_QUEENSIDE_CASTLE);
+    expectRights("k", BLACK_KINGSIDE_CASTLE);
+    expectRights("q", BLACK_QUEENSIDE_CASTLE);
+    expectRights("KQ", WHITE_KINGSIDE_CASTLE | WHITE_QUEENSIDE_CASTLE);
+    expectRights("kq", BLACK_KINGSIDE_CASTLE | BLACK_QUEENSIDE_CASTLE);
+    expectRights("Kq", WHITE_KINGSIDE_CASTLE | BLACK_QUEENSIDE_CASTLE);
+    expectRights("KQkq", WHITE_KINGSIDE_CASTLE | WHITE_QUEENSIDE_CASTLE | BLACK_KINGSIDE_CASTLE | BLACK_QUEENSIDE_CASTLE);
+    expectRights("qkQK", WHITE_KINGSIDE_CASTLE | WHITE_QUEENSIDE_CASTLE | BLACK_KINGSIDE_CASTLE | BLACK_QUEENSIDE_CASTLE);
+
+    std::cout << "--- empty ---\n";
+    expectRightsThrows("", "argument missing");
+
+    std::cout << "--- duplicates ---\n";
+    expectRightsThrows("KK", "duplicate character");
+    expectRightsThrows("KQK", "duplicate character");
+    expectRightsThrows("KKKK", "duplicate character");
+    expectRightsThrows("kqkq", "duplicate character");
+
+    std::cout << "--- too many characters ---\n";
+    expectRightsThrows("KQkqK", "too many characters");
+    expectRightsThrows("KQkqkq", "too many characters");
+
+    std::cout << "--- invalid characters ---\n";
+    expectRightsThrows("x", "invalid character");
+    expectRightsThrows("-K", "invalid character");
+    expectRightsThrows("K-", "invalid character");
+    expectRightsThrows("--", "invalid character");
+    expectRightsThrows(" K", "invalid character");
+    expectRightsThrows("KQx", "invalid character");
+    expectRightsThrows("1", "invalid character");
 
     std::cout << "\n" << (failures == 0 ? "all passed" : "some failed")
               << " (" << failures << " failures)\n";
