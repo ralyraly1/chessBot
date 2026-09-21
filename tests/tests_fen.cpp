@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <optional>
 
 static int failures = 0;
 
@@ -221,6 +222,66 @@ static void expectRightsThrows(const std::string& input, const std::string& mess
     }
 }
 
+static void expectSquare(const std::string& input, int expectedFile, int expectedRank) {
+    try {
+        std::optional<Square> got = parseEnPassant(input);
+        if (!got.has_value()) {
+            std::cout << "FAIL  \"" << input << "\": expected a square but got none\n";
+            failures++;
+        } else if (got->file != expectedFile || got->rank != expectedRank) {
+            std::cout << "FAIL  \"" << input << "\": expected file " << expectedFile
+                      << " rank " << expectedRank
+                      << " got file " << static_cast<int>(got->file)
+                      << " rank " << static_cast<int>(got->rank) << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" -> file " << static_cast<int>(got->file)
+                      << " rank " << static_cast<int>(got->rank) << "\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": unexpected throw: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
+static void expectNoSquare(const std::string& input) {
+    try {
+        std::optional<Square> got = parseEnPassant(input);
+        if (got.has_value()) {
+            std::cout << "FAIL  \"" << input << "\": expected no square but got one\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" -> none\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": unexpected throw: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
+static void expectEnPassantThrows(const std::string& input, const std::string& messagePart) {
+    try {
+        parseEnPassant(input);
+        std::cout << "FAIL  \"" << input << "\": should have thrown\n";
+        failures++;
+    } catch (const std::invalid_argument& e) {
+        std::string msg = e.what();
+        if (msg.find(messagePart) == std::string::npos) {
+            std::cout << "FAIL  \"" << input << "\": threw the wrong message: "
+                      << msg << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" threw: " << msg << "\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": wrong exception type: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
 int main() {
     std::cout << "--- valid ranks ---\n";
     expectRank("rnbqkbnr", "rnbqkbnr");
@@ -353,6 +414,30 @@ int main() {
     expectRightsThrows(" K", "invalid character");
     expectRightsThrows("KQx", "invalid character");
     expectRightsThrows("1", "invalid character");
+
+    std::cout << "--- valid en passant squares ---\n";
+    expectNoSquare("-");
+    expectSquare("e3", 4, 5);
+    expectSquare("a6", 0, 2);
+    expectSquare("h3", 7, 5);
+    expectSquare("a8", 0, 0);
+    expectSquare("e4", 4, 4);
+    expectSquare("a1", 0, 7);
+    expectSquare("h8", 7, 0);
+    expectSquare("h1", 7, 7);
+
+
+    std::cout << "--- invalid en passant ---\n";
+    expectEnPassantThrows("", "argument missing");
+    expectEnPassantThrows("i3", "file must be a letter");
+    expectEnPassantThrows("e", "length invalid");
+    expectEnPassantThrows("e33", "length invalid");
+    expectEnPassantThrows("e3 ", "length invalid");
+    expectEnPassantThrows("E3", "file must be a letter");
+    expectEnPassantThrows("3e", "file must be a letter");
+    expectEnPassantThrows("e9", "rank must be a digit");
+    expectEnPassantThrows("e0", "rank must be a digit");
+     expectEnPassantThrows("ea", "rank must be a digit");
 
     std::cout << "\n" << (failures == 0 ? "all passed" : "some failed")
               << " (" << failures << " failures)\n";
