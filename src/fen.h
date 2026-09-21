@@ -2,6 +2,7 @@
 #include "types.h"
 #include <array>
 #include <string>
+#include <optional>
 
 std::array<Piece, FILES> parseRank(std::string rankStr);
 std::array<std::array<Piece, FILES>, RANKS> parseBoard(std::string boardStr);
