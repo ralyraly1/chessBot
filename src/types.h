@@ -4,6 +4,7 @@
 
 inline constexpr int RANKS = 8; // Rank index 0 is equivalent to rank 8 on the chess board
 inline constexpr int FILES = 8; 
+inline constexpr int FIELDS = 6;
 
 inline constexpr std::uint8_t BLACK_QUEENSIDE_CASTLE = 0b0001;
 inline constexpr std::uint8_t BLACK_KINGSIDE_CASTLE = 0b0010;
