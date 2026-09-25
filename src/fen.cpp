@@ -5,6 +5,8 @@
 #include <cctype>
 #include <iostream>
 #include <optional>
+#include <algorithm>
+#include <cctype>
 
 std::array<Piece, FILES> parseRank(std::string rankStr){
     std::array<Piece, FILES> rankArr;
@@ -193,4 +195,33 @@ std::optional<Square> parseEnPassant(std::string enPStr){
     sq.rank = rankIndex;
     enPassantSquare = sq;
     return enPassantSquare;
+}
+
+std::uint8_t parseHalfmoveCount(std::string halfmoveStr){
+    int halfmoveCount = 0;
+    int parsedCount;
+    if (halfmoveStr == "0"){
+        return halfmoveCount;
+    }
+    if (halfmoveStr == ""){
+        throw std::invalid_argument(halfmoveStr + ": Halfmove count argument missing.");
+    }
+    if (!(std::all_of(halfmoveStr.begin(), halfmoveStr.end(), ::isdigit))){
+        throw std::invalid_argument(halfmoveStr + ": Halfmove count argument contains an invalid character");
+    }
+    if (halfmoveStr.length() > 1 && halfmoveStr[0] == '0'){
+        throw std::invalid_argument(halfmoveStr + ": Halfmove count argument contains a leading 0");
+    }
+    try {
+        parsedCount = std::stoi(halfmoveStr);
+    } 
+    catch (const std::out_of_range&) {
+        throw std::invalid_argument(halfmoveStr + ": Halfmove count is too large");
+    }
+    halfmoveCount = parsedCount;
+    if (halfmoveCount > 150 || halfmoveCount < 0){
+        throw std::invalid_argument(halfmoveStr + ": Halfmove count can not be greater than 150 or less than 0.");
+    }
+    halfmoveCount = static_cast<uint8_t>(halfmoveCount);
+    return halfmoveCount;
 }

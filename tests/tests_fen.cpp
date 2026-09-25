@@ -282,6 +282,46 @@ static void expectEnPassantThrows(const std::string& input, const std::string& m
     }
 }
 
+static void expectHalfmoveCount(const std::string& input, std::uint8_t expectedCount) {
+    try {
+        std::uint8_t got = parseHalfmoveCount(input);
+        if (got != expectedCount) {
+            std::cout << "FAIL  \"" << input << "\": expected count " << static_cast<int>(expectedCount)
+                    << " got count " << static_cast<int>(got) << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" -> count " << static_cast<int>(got) << "\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": unexpected throw: "
+                << e.what() << "\n";
+        failures++;
+    }
+}
+
+static void expectHalfmoveCountThrows(const std::string& input, const std::string& messagePart) {
+    try {
+        parseHalfmoveCount(input);
+        std::cout << "FAIL  \"" << input << "\": should have thrown\n";
+        failures++;
+    }
+    catch (const std::invalid_argument& e) {
+        std::string msg = e.what();
+        if (msg.find(messagePart) == std::string::npos) {
+            std::cout << "FAIL  \"" << input << "\": threw the wrong message: "
+                      << msg << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" threw: " << msg << "\n";
+        }
+    }
+    catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": wrong exception type: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
 int main() {
     std::cout << "--- valid ranks ---\n";
     expectRank("rnbqkbnr", "rnbqkbnr");
@@ -437,7 +477,26 @@ int main() {
     expectEnPassantThrows("3e", "file must be a letter");
     expectEnPassantThrows("e9", "rank must be a digit");
     expectEnPassantThrows("e0", "rank must be a digit");
-     expectEnPassantThrows("ea", "rank must be a digit");
+    expectEnPassantThrows("ea", "rank must be a digit");
+
+    std::cout << "--- valid halfmove counts ---\n";
+    expectHalfmoveCount("0", 0);
+    expectHalfmoveCount("7", 7);
+    expectHalfmoveCount("100", 100);
+    expectHalfmoveCount("150", 150);
+
+
+    std::cout << "--- invalid halfmove count ---\n";
+    expectHalfmoveCountThrows("", "argument missing");
+    expectHalfmoveCountThrows("-5", "invalid character");
+    expectHalfmoveCountThrows("+3", "invalid character");
+    expectHalfmoveCountThrows("5x", "invalid character");
+    expectHalfmoveCountThrows(" 5", "invalid character");
+    expectHalfmoveCountThrows("00", "leading 0");
+    expectHalfmoveCountThrows("007", "leading 0");
+    expectHalfmoveCountThrows("151", "greater than 150");
+    expectHalfmoveCountThrows("99999999999999", "too large");
+
 
     std::cout << "\n" << (failures == 0 ? "all passed" : "some failed")
               << " (" << failures << " failures)\n";
