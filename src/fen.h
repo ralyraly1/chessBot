@@ -10,3 +10,4 @@ Side parseSide(std::string sideStr);
 std::uint8_t parseCastleRights(std::string castleStr);
 std::optional<Square> parseEnPassant(std::string enPStr);
 std::uint8_t parseHalfmoveCount(std::string halfmoveStr);
+std::uint16_t parseFullmoveCount(std::string fullmoveStr);

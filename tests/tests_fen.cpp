@@ -322,6 +322,46 @@ static void expectHalfmoveCountThrows(const std::string& input, const std::strin
     }
 }
 
+static void expectFullmoveCount(const std::string& input, std::uint16_t expectedCount) {
+    try {
+        std::uint16_t got = parseFullmoveCount(input);
+        if (got != expectedCount) {
+            std::cout << "FAIL  \"" << input << "\": expected count " << static_cast<int>(expectedCount)
+                    << " got count " << static_cast<int>(got) << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" -> count " << static_cast<int>(got) << "\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": unexpected throw: "
+                << e.what() << "\n";
+        failures++;
+    }
+}
+
+static void expectFullmoveCountThrows(const std::string& input, const std::string& messagePart) {
+    try {
+        parseFullmoveCount(input);
+        std::cout << "FAIL  \"" << input << "\": should have thrown\n";
+        failures++;
+    }
+    catch (const std::invalid_argument& e) {
+        std::string msg = e.what();
+        if (msg.find(messagePart) == std::string::npos) {
+            std::cout << "FAIL  \"" << input << "\": threw the wrong message: "
+                      << msg << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" threw: " << msg << "\n";
+        }
+    }
+    catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": wrong exception type: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
 int main() {
     std::cout << "--- valid ranks ---\n";
     expectRank("rnbqkbnr", "rnbqkbnr");
@@ -466,7 +506,6 @@ int main() {
     expectSquare("h8", 7, 0);
     expectSquare("h1", 7, 7);
 
-
     std::cout << "--- invalid en passant ---\n";
     expectEnPassantThrows("", "argument missing");
     expectEnPassantThrows("i3", "file must be a letter");
@@ -485,7 +524,6 @@ int main() {
     expectHalfmoveCount("100", 100);
     expectHalfmoveCount("150", 150);
 
-
     std::cout << "--- invalid halfmove count ---\n";
     expectHalfmoveCountThrows("", "argument missing");
     expectHalfmoveCountThrows("-5", "invalid character");
@@ -496,6 +534,25 @@ int main() {
     expectHalfmoveCountThrows("007", "leading 0");
     expectHalfmoveCountThrows("256", "exceed 255");
     expectHalfmoveCountThrows("99999999999999", "too large");
+
+    std::cout << "--- valid fullmove counts ---\n";
+    expectFullmoveCount("1", 1);
+    expectFullmoveCount("7", 7);
+    expectFullmoveCount("100", 100);
+    expectFullmoveCount("150", 150);
+    expectFullmoveCount("789", 789);
+    expectFullmoveCount("65535", 65535);
+
+    std::cout << "--- invalid fullmove count ---\n";
+    expectFullmoveCountThrows("", "argument missing");
+    expectFullmoveCountThrows("-5", "invalid character");
+    expectFullmoveCountThrows("+3", "invalid character");
+    expectFullmoveCountThrows("5x", "invalid character");
+    expectFullmoveCountThrows(" 5", "invalid character");
+    expectFullmoveCountThrows("00", "leading 0");
+    expectFullmoveCountThrows("007", "leading 0");
+    expectFullmoveCountThrows("65536", "exceed 65535");
+    expectFullmoveCountThrows("99999999999999", "too large");
 
 
     std::cout << "\n" << (failures == 0 ? "all passed" : "some failed")

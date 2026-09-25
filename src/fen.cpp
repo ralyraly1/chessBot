@@ -219,9 +219,41 @@ std::uint8_t parseHalfmoveCount(std::string halfmoveStr){
         throw std::invalid_argument(halfmoveStr + ": Halfmove count is too large");
     }
     halfmoveCount = parsedCount;
-    if (halfmoveCount > 255 ){
+    if (halfmoveCount > 255){
         throw std::invalid_argument(halfmoveStr + ": Halfmove count can not exceed 255, as it does not fit in a byte.");
     }
     halfmoveCount = static_cast<uint8_t>(halfmoveCount);
     return halfmoveCount;
+}
+
+std::uint16_t parseFullmoveCount(std::string fullmoveStr){
+    int fullmoveCount = 1;
+    int parsedCount;
+    if (fullmoveStr == "1"){
+        return fullmoveCount;
+    }
+    if (fullmoveStr == "0"){
+        throw std::invalid_argument(fullmoveStr + ": Fullmove count must be at least 1.");
+    }
+    if (fullmoveStr == ""){
+        throw std::invalid_argument(fullmoveStr + ": Fullmove count argument missing.");
+    }
+    if (!(std::all_of(fullmoveStr.begin(), fullmoveStr.end(), ::isdigit))){
+        throw std::invalid_argument(fullmoveStr + ": Fullmove count argument contains an invalid character");
+    }
+    if (fullmoveStr.length() > 1 && fullmoveStr[0] == '0'){
+        throw std::invalid_argument(fullmoveStr + ": Fullmove count argument contains a leading 0");
+    }
+    try {
+        parsedCount = std::stoi(fullmoveStr);
+    } 
+    catch (const std::out_of_range&) {
+        throw std::invalid_argument(fullmoveStr + ": Fullmove count is too large");
+    }
+    fullmoveCount = parsedCount;
+    if (fullmoveCount > 65535){
+        throw std::invalid_argument(fullmoveStr + ": Fullmove count can not exceed 65535, as it does not fit in 2 bytes.");
+    }
+    fullmoveCount = static_cast<uint16_t>(fullmoveCount);
+    return fullmoveCount;
 }
