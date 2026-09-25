@@ -494,7 +494,7 @@ int main() {
     expectHalfmoveCountThrows(" 5", "invalid character");
     expectHalfmoveCountThrows("00", "leading 0");
     expectHalfmoveCountThrows("007", "leading 0");
-    expectHalfmoveCountThrows("151", "greater than 150");
+    expectHalfmoveCountThrows("256", "exceed 255");
     expectHalfmoveCountThrows("99999999999999", "too large");
 
 

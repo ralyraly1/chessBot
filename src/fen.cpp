@@ -219,8 +219,8 @@ std::uint8_t parseHalfmoveCount(std::string halfmoveStr){
         throw std::invalid_argument(halfmoveStr + ": Halfmove count is too large");
     }
     halfmoveCount = parsedCount;
-    if (halfmoveCount > 150 || halfmoveCount < 0){
-        throw std::invalid_argument(halfmoveStr + ": Halfmove count can not be greater than 150 or less than 0.");
+    if (halfmoveCount > 255 ){
+        throw std::invalid_argument(halfmoveStr + ": Halfmove count can not exceed 255, as it does not fit in a byte.");
     }
     halfmoveCount = static_cast<uint8_t>(halfmoveCount);
     return halfmoveCount;
