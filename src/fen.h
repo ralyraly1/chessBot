@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "board.h"
 #include <array>
 #include <string>
 #include <optional>
@@ -11,3 +12,4 @@ std::uint8_t parseCastleRights(std::string castleStr);
 std::optional<Square> parseEnPassant(std::string enPStr);
 std::uint8_t parseHalfmoveCount(std::string halfmoveStr);
 std::uint16_t parseFullmoveCount(std::string fullmoveStr);
+Position parseFEN(std::string FENStr);

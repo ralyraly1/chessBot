@@ -362,6 +362,69 @@ static void expectFullmoveCountThrows(const std::string& input, const std::strin
     }
 }
 
+static void expectFEN(const std::string& input, Side expectedSide, std::uint8_t expectedRights, bool expectedHasEnPassant, std::uint8_t expectedHalfmove, std::uint16_t expectedFullmove) {
+    try {
+        Position pos = parseFEN(input);
+        bool ok = true;
+        if (pos.sideToMove != expectedSide) {
+            std::cout << "FAIL  \"" << input << "\": expected side " << sideName(expectedSide)
+                      << " got " << sideName(pos.sideToMove) << "\n";
+            ok = false;
+        }
+        if (pos.castleRights != expectedRights) {
+            std::cout << "FAIL  \"" << input << "\": expected rights " << rightsToString(expectedRights)
+                      << " got " << rightsToString(pos.castleRights) << "\n";
+            ok = false;
+        }
+        if (pos.enPassantSquare.has_value() != expectedHasEnPassant) {
+            std::cout << "FAIL  \"" << input << "\": en passant presence mismatch\n";
+            ok = false;
+        }
+        if (pos.halfmoveCount != expectedHalfmove) {
+            std::cout << "FAIL  \"" << input << "\": expected halfmove " << static_cast<int>(expectedHalfmove)
+                    << " got " << static_cast<int>(pos.halfmoveCount) << "\n";
+            ok = false;
+        }
+        if (pos.fullmoveCount != expectedFullmove) {
+            std::cout << "FAIL  \"" << input << "\": expected fullmove " << expectedFullmove
+                    << " got " << pos.fullmoveCount << "\n";
+            ok = false;
+        }
+        if (ok) {
+            std::cout << "ok    \"" << input << "\"\n";
+        } else {
+            failures++;
+        }
+    } catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": unexpected throw: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
+static void expectFENThrows(const std::string& input, const std::string& messagePart) {
+    try {
+        parseFEN(input);
+        std::cout << "FAIL  \"" << input << "\": should have thrown\n";
+        failures++;
+    }
+    catch (const std::invalid_argument& e) {
+        std::string msg = e.what();
+        if (msg.find(messagePart) == std::string::npos) {
+            std::cout << "FAIL  \"" << input << "\": threw the wrong message: "
+                      << msg << "\n";
+            failures++;
+        } else {
+            std::cout << "ok    \"" << input << "\" threw: " << msg << "\n";
+        }
+    }
+    catch (const std::exception& e) {
+        std::cout << "FAIL  \"" << input << "\": wrong exception type: "
+                  << e.what() << "\n";
+        failures++;
+    }
+}
+
 int main() {
     std::cout << "--- valid ranks ---\n";
     expectRank("rnbqkbnr", "rnbqkbnr");
@@ -554,6 +617,20 @@ int main() {
     expectFullmoveCountThrows("65536", "exceed 65535");
     expectFullmoveCountThrows("99999999999999", "too large");
 
+    std::cout << "--- valid FEN ---\n";
+    expectFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            Side::White,
+            WHITE_KINGSIDE_CASTLE | WHITE_QUEENSIDE_CASTLE | BLACK_KINGSIDE_CASTLE | BLACK_QUEENSIDE_CASTLE,
+            false,
+            0,
+            1);
+
+    std::cout << "--- wrong field count ---\n";
+    expectFENThrows("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -", "Too few fields");
+    expectFENThrows("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 extra", "Too many fields");
+
+    std::cout << "--- malformed inner field propagates ---\n";
+    expectFENThrows("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w XYZQ - 0 1", "invalid character");
 
     std::cout << "\n" << (failures == 0 ? "all passed" : "some failed")
               << " (" << failures << " failures)\n";

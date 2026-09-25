@@ -1,4 +1,5 @@
 #include "types.h"
+#include "board.h"
 #include <array>
 #include <string>
 #include <stdexcept>
@@ -256,4 +257,34 @@ std::uint16_t parseFullmoveCount(std::string fullmoveStr){
     }
     fullmoveCount = static_cast<uint16_t>(fullmoveCount);
     return fullmoveCount;
+}
+
+Position parseFEN(std::string FENStr){
+    Position currPosition;
+    int currSpaces = 0;
+    std::array<std::string, FIELDS> fields;
+    std::string fieldStr;
+    for(const char c : FENStr){
+        if(c == ' '){
+            if(currSpaces >= FIELDS-1){
+                throw std::invalid_argument(FENStr + ": Too many fields, expected 6 separated by 5 spaces");
+            }
+            fields[currSpaces] = fieldStr;
+            fieldStr = "";
+            currSpaces++;
+            continue;
+        }
+        fieldStr += c;
+    }
+    if (currSpaces < FIELDS-1){
+        throw std::invalid_argument(FENStr + ": Too few fields, expected 6 separated by 5 spaces");
+    }
+    fields[currSpaces] = fieldStr;
+    currPosition.board = parseBoard(fields[0]);
+    currPosition.sideToMove = parseSide(fields[1]);
+    currPosition.castleRights = parseCastleRights(fields[2]);
+    currPosition.enPassantSquare = parseEnPassant(fields[3]);
+    currPosition.halfmoveCount = parseHalfmoveCount(fields[4]);
+    currPosition.fullmoveCount = parseFullmoveCount(fields[5]);
+    return currPosition;
 }
